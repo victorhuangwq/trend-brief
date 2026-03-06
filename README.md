@@ -1,6 +1,6 @@
 # Trend Brief
 
-Trend Brief is a demo app that generates presentation-style trend reports powered by Exa's search API. An analyst types in a trend topic (e.g., "Gourmand Fragrances") and a vertical (e.g., "Beauty"), and the app returns a visual brief showing emerging brands, expert articles, and community discussions discovered from the open web, the kind of internal tooling a consumer insights team at Estée Lauder or L'Oréal could build.
+Trend Brief is a demo app that generates presentation-style trend reports. An analyst types in a trend topic (e.g., "Gourmand Fragrances") and a vertical (e.g., "Beauty"), and the app returns a visual brief showing emerging brands, expert articles, and community discussions discovered from the open web, the kind of internal tooling a consumer insights team at Estée Lauder or L'Oréal could build.
 
 ## Setup
 
