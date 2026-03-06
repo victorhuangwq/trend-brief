@@ -167,9 +167,9 @@ export default function ExpertSlide({ results, isLoading, insight }: ExpertSlide
   const grid = results.slice(1);
 
   return (
-    <section className="min-h-screen w-full snap-start bg-white flex flex-col">
+    <section className="h-screen w-full snap-start bg-white flex flex-col">
       {/* Section header */}
-      <div className="bg-indigo-600 px-8 py-8 md:px-16">
+      <div className="bg-indigo-600 px-8 py-6 md:px-16">
         <div className="max-w-6xl mx-auto flex items-baseline gap-5">
           <span className="text-indigo-300 text-xs font-mono tracking-[0.3em] shrink-0">02</span>
           <div>
@@ -181,16 +181,16 @@ export default function ExpertSlide({ results, isLoading, insight }: ExpertSlide
 
       {/* Insight callout */}
       {insight && (
-        <div className="px-8 py-4 md:px-16 bg-indigo-50 border-b border-indigo-100">
+        <div className="px-8 py-3 md:px-16 bg-indigo-50 border-b border-indigo-100">
           <div className="max-w-6xl mx-auto flex items-start gap-3">
             <span className="text-indigo-400 mt-0.5 shrink-0">◆</span>
-            <p className="text-indigo-800 text-sm leading-relaxed italic">{insight}</p>
+            <p className="text-indigo-800 text-sm leading-relaxed italic line-clamp-2">{insight}</p>
           </div>
         </div>
       )}
 
       {/* Content */}
-      <div className="flex-1 px-8 py-8 md:px-16 md:py-10">
+      <div className="flex-1 min-h-0 px-8 py-5 md:px-16 md:py-6 overflow-y-auto">
         <div className="max-w-6xl mx-auto space-y-8">
           {isLoading ? (
             <>
