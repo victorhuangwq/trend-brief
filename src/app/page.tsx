@@ -2,62 +2,67 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import TitleSlide from "@/components/TitleSlide";
-import ContentSlide from "@/components/ContentSlide";
+import BrandsSlide from "@/components/BrandsSlide";
+import ExpertSlide from "@/components/ExpertSlide";
+import CommunitySlide from "@/components/CommunitySlide";
+import AnalystBriefSlide from "@/components/AnalystBriefSlide";
 import NavigationDots from "@/components/NavigationDots";
 import { ExaResult } from "@/lib/exa";
+import { ParsedSummary, parseSummary } from "@/lib/claude";
 
 interface BriefState {
   brands: ExaResult[];
   articles: ExaResult[];
   discussions: ExaResult[];
-  summary: string;
+  parsedSummary: ParsedSummary | null;
   brandsLoaded: boolean;
   articlesLoaded: boolean;
   discussionsLoaded: boolean;
+  summaryLoaded: boolean;
 }
 
 const SECTIONS = [
-  "Title",
-  "Emerging Brands",
-  "Expert Analysis",
-  "Community Sentiment",
+  "Cover",
+  "Brands to Watch",
+  "Expert Voices",
+  "Community Pulse",
+  "Analyst Brief",
 ];
 
+const INITIAL_STATE: BriefState = {
+  brands: [],
+  articles: [],
+  discussions: [],
+  parsedSummary: null,
+  brandsLoaded: false,
+  articlesLoaded: false,
+  discussionsLoaded: false,
+  summaryLoaded: false,
+};
+
 export default function Home() {
-  const [category, setCategory] = useState<string | null>(null);
+  const [topic, setTopic] = useState<string | null>(null);
+  const [vertical, setVertical] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeSection, setActiveSection] = useState(0);
-  const [brief, setBrief] = useState<BriefState>({
-    brands: [],
-    articles: [],
-    discussions: [],
-    summary: "",
-    brandsLoaded: false,
-    articlesLoaded: false,
-    discussionsLoaded: false,
-  });
+  const [brief, setBrief] = useState<BriefState>(INITIAL_STATE);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<(HTMLElement | null)[]>([]);
 
-  const handleGenerate = useCallback(async (cat: string) => {
-    setCategory(cat);
+  const handleGenerate = useCallback(async (t: string, v: string) => {
+    setTopic(t);
+    setVertical(v || null);
     setIsGenerating(true);
-    setBrief({
-      brands: [],
-      articles: [],
-      discussions: [],
-      summary: "",
-      brandsLoaded: false,
-      articlesLoaded: false,
-      discussionsLoaded: false,
-    });
+    setBrief(INITIAL_STATE);
+
+    containerRef.current?.scrollTo({ top: 0 });
 
     try {
       const response = await fetch("/api/brief", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category: cat }),
+        body: JSON.stringify({ topic: t, vertical: v || undefined }),
       });
 
       if (!response.ok) throw new Error("Failed to generate brief");
@@ -82,31 +87,19 @@ export default function Home() {
             const event = JSON.parse(line.slice(6));
 
             if (event.type === "brands") {
-              setBrief((prev) => ({
-                ...prev,
-                brands: event.data,
-                brandsLoaded: true,
-              }));
+              setBrief((prev) => ({ ...prev, brands: event.data, brandsLoaded: true }));
             } else if (event.type === "articles") {
-              setBrief((prev) => ({
-                ...prev,
-                articles: event.data,
-                articlesLoaded: true,
-              }));
+              setBrief((prev) => ({ ...prev, articles: event.data, articlesLoaded: true }));
             } else if (event.type === "discussions") {
-              setBrief((prev) => ({
-                ...prev,
-                discussions: event.data,
-                discussionsLoaded: true,
-              }));
+              setBrief((prev) => ({ ...prev, discussions: event.data, discussionsLoaded: true }));
             } else if (event.type === "summary") {
-              setBrief((prev) => ({
-                ...prev,
-                summary: event.data,
-              }));
+              const parsed = parseSummary(event.data as string);
+              setBrief((prev) => ({ ...prev, parsedSummary: parsed, summaryLoaded: true }));
+            } else if (event.type === "error") {
+              console.error("Brief API error:", event.data);
             }
           } catch {
-            // Skip malformed JSON
+            // skip malformed events
           }
         }
       }
@@ -117,7 +110,6 @@ export default function Home() {
     }
   }, []);
 
-  // Scroll observation for active section tracking
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -126,9 +118,7 @@ export default function Home() {
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            const index = sectionRefs.current.indexOf(
-              entry.target as HTMLElement
-            );
+            const index = sectionRefs.current.indexOf(entry.target as HTMLElement);
             if (index !== -1) setActiveSection(index);
           }
         }
@@ -141,73 +131,61 @@ export default function Home() {
     });
 
     return () => observer.disconnect();
-  }, [category]);
+  }, [topic]);
 
   const navigateToSection = (index: number) => {
     sectionRefs.current[index]?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const showSlides = category !== null;
+  const showSlides = topic !== null;
+
+  const setRef = (index: number) => (el: HTMLElement | null) => {
+    sectionRefs.current[index] = el;
+  };
 
   return (
     <div ref={containerRef} className="snap-container">
-      <div
-        ref={(el) => {
-          sectionRefs.current[0] = el;
-        }}
-      >
+      <div ref={setRef(0)}>
         <TitleSlide
           onGenerate={handleGenerate}
           isGenerating={isGenerating}
-          summary={brief.summary}
-          category={category ?? undefined}
+          signalStrength={brief.parsedSummary?.signalStrength}
+          topic={topic ?? undefined}
+          vertical={vertical ?? undefined}
         />
       </div>
 
       {showSlides && (
         <>
-          <div
-            ref={(el) => {
-              sectionRefs.current[1] = el;
-            }}
-          >
-            <ContentSlide
-              title="Emerging Brands"
-              subtitle="Indie and DTC brands building around this trend"
+          <div ref={setRef(1)}>
+            <BrandsSlide
               results={brief.brands}
               isLoading={!brief.brandsLoaded}
-              variant="brand"
-              accentColor="bg-gradient-to-r from-teal-700 to-teal-600"
+              insight={brief.parsedSummary?.brandSignal}
             />
           </div>
 
-          <div
-            ref={(el) => {
-              sectionRefs.current[2] = el;
-            }}
-          >
-            <ContentSlide
-              title="Expert Analysis"
-              subtitle="Industry insights and thought leadership"
+          <div ref={setRef(2)}>
+            <ExpertSlide
               results={brief.articles}
               isLoading={!brief.articlesLoaded}
-              variant="article"
-              accentColor="bg-gradient-to-r from-indigo-700 to-indigo-600"
+              insight={brief.parsedSummary?.expertSignal}
             />
           </div>
 
-          <div
-            ref={(el) => {
-              sectionRefs.current[3] = el;
-            }}
-          >
-            <ContentSlide
-              title="Community Sentiment"
-              subtitle="What real consumers are saying"
+          <div ref={setRef(3)}>
+            <CommunitySlide
               results={brief.discussions}
               isLoading={!brief.discussionsLoaded}
-              variant="discussion"
-              accentColor="bg-gradient-to-r from-amber-700 to-amber-600"
+              insight={brief.parsedSummary?.communitySignal}
+            />
+          </div>
+
+          <div ref={setRef(4)}>
+            <AnalystBriefSlide
+              parsed={brief.parsedSummary ?? undefined}
+              isLoading={!brief.summaryLoaded}
+              topic={topic}
             />
           </div>
         </>

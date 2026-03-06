@@ -2,10 +2,11 @@ import { searchBrands, searchArticles, searchDiscussions } from "@/lib/exa";
 import { generateSummary } from "@/lib/claude";
 
 export async function POST(request: Request) {
-  const { category } = await request.json();
+  const body = await request.json();
+  const { topic, vertical } = body as { topic: string; vertical?: string };
 
-  if (!category || typeof category !== "string") {
-    return new Response(JSON.stringify({ error: "Category is required" }), {
+  if (!topic || typeof topic !== "string") {
+    return new Response(JSON.stringify({ error: "Topic is required" }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
     });
@@ -19,18 +20,22 @@ export async function POST(request: Request) {
       };
 
       try {
-        // Fire all 3 Exa searches in parallel, stream each as it completes
-        const brandsPromise = searchBrands(category).then((data) => {
+        console.log(`[brief] Starting searches for topic="${topic}" vertical="${vertical}"`);
+
+        const brandsPromise = searchBrands(topic, vertical).then((data) => {
+          console.log(`[brief] Brands: ${data.length} results`);
           send({ type: "brands", data });
           return data;
         });
 
-        const articlesPromise = searchArticles(category).then((data) => {
+        const articlesPromise = searchArticles(topic, vertical).then((data) => {
+          console.log(`[brief] Articles: ${data.length} results`);
           send({ type: "articles", data });
           return data;
         });
 
-        const discussionsPromise = searchDiscussions(category).then((data) => {
+        const discussionsPromise = searchDiscussions(topic, vertical).then((data) => {
+          console.log(`[brief] Discussions: ${data.length} results`);
           send({ type: "discussions", data });
           return data;
         });
@@ -41,17 +46,14 @@ export async function POST(request: Request) {
           discussionsPromise,
         ]);
 
-        // Generate summary with Claude after all results are in
-        const summary = await generateSummary(
-          category,
-          brands,
-          articles,
-          discussions
-        );
+        console.log("[brief] Starting Claude summary generation...");
+        const summary = await generateSummary(topic, vertical, brands, articles, discussions);
+        console.log(`[brief] Summary generated (${summary.length} chars)`);
         send({ type: "summary", data: summary });
 
         send({ type: "done" });
       } catch (error) {
+        console.error("[brief] Error:", error);
         send({
           type: "error",
           data: error instanceof Error ? error.message : "An error occurred",
