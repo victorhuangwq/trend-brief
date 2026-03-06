@@ -67,9 +67,9 @@ export async function generateSummary(
 
   const message = await getClient().messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 1000,
+    max_tokens: 500,
     system:
-      "You are a pre-trend analyst for consumer insights teams. You identify signals gaining traction before mainstream awareness. You write for experienced strategists who want to know what to act on now, not what everyone already knows. Be specific and direct — every claim must be grounded in the research provided.",
+      "You are a pre-trend analyst. You write ultra-concise briefs for experienced strategists. Every sentence must earn its place. No filler, no hedging, no generic marketing language. Ground every claim in the research provided.",
     messages: [
       {
         role: "user",
@@ -77,23 +77,23 @@ export async function generateSummary(
 
 ${digest}
 
-Write a structured pre-trend brief in EXACTLY this format (use the exact bold labels):
+Write a structured pre-trend brief in EXACTLY this format (use the exact bold labels). Be extremely concise — this will be displayed on presentation slides.
 
-**SIGNAL STRENGTH:** [one line: is this a weak early signal, a building signal, or a confirmed emerging trend?]
+**SIGNAL STRENGTH:** [one short phrase: weak early signal / building signal / confirmed emerging trend]
 
 **BRAND SIGNAL:**
-[1-2 sentences about what the brand landscape reveals — which types of brands are emerging, what positioning they share]
+[1 sentence: what the brand landscape reveals]
 
 **EXPERT SIGNAL:**
-[1-2 sentences about what experts and industry coverage reveal — what the journalism/analysis angle is]
+[1 sentence: what expert/industry coverage reveals]
 
 **COMMUNITY SIGNAL:**
-[1-2 sentences about what community/social signals reveal — the consumer language and sentiment patterns]
+[1 sentence: what community/social signals reveal]
 
 **ANALYST BRIEF:**
-[3-4 sentences: what this means for brands right now, who should act, why timing matters, what the pre-mainstream opportunity is]
+[2-3 punchy sentences max: what this means for brands, who should act now, the pre-mainstream opportunity]
 
-Do not hedge. Do not use generic marketing language. Ground every claim in the research above.`,
+Keep it tight. No more than 2-3 sentences per section. This is a slide deck, not a report.`,
       },
     ],
   });

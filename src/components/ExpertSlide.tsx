@@ -25,8 +25,17 @@ function formatDate(dateStr?: string): string {
   }
 }
 
-function stripMarkdown(text: string): string {
-  return text.replace(/^[#*\->\s]+/, "").replace(/\*\*/g, "").replace(/\*/g, "").trim();
+function stripMarkdown(text: string, maxLen = 300): string {
+  const cleaned = text
+    .replace(/#{1,6}\s*/g, "")       // ## headers
+    .replace(/\*\*/g, "")             // **bold**
+    .replace(/\*/g, "")               // *italic*
+    .replace(/^[\s]*[-–•]\s*/gm, "")  // - list items
+    .replace(/\n+/g, " ")             // collapse newlines
+    .replace(/\s{2,}/g, " ")          // collapse spaces
+    .trim();
+  if (cleaned.length <= maxLen) return cleaned;
+  return cleaned.slice(0, maxLen).replace(/\s\S*$/, "") + "...";
 }
 
 function PublicationBadge({ domain }: { domain: string }) {
@@ -40,8 +49,8 @@ function PublicationBadge({ domain }: { domain: string }) {
 function FeaturedArticleCard({ result }: { result: ExaResult }) {
   const domain = getDomain(result.url);
   const date = formatDate(result.publishedDate);
-  const rawQuote = result.highlights?.[0] || result.text?.slice(0, 250) || "";
-  const pullQuote = stripMarkdown(rawQuote);
+  const rawQuote = result.highlights?.[0] || result.text?.slice(0, 300) || "";
+  const pullQuote = stripMarkdown(rawQuote, 200);
 
   return (
     <a
@@ -95,7 +104,7 @@ function ArticleGridCard({ result, index }: { result: ExaResult; index: number }
   const domain = getDomain(result.url);
   const date = formatDate(result.publishedDate);
   const rawExcerpt = result.highlights?.[0] || result.text?.slice(0, 200) || "";
-  const excerpt = stripMarkdown(rawExcerpt);
+  const excerpt = stripMarkdown(rawExcerpt, 150);
 
   return (
     <a

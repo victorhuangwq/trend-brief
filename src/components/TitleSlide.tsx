@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, KeyboardEvent, useRef } from "react";
+import { useState, KeyboardEvent, useRef, useCallback } from "react";
 
 interface TitleSlideProps {
   onGenerate: (topic: string, vertical: string) => void;
@@ -21,7 +21,24 @@ export default function TitleSlide({
   const [verticalInput, setVerticalInput] = useState("");
   const verticalRef = useRef<HTMLInputElement>(null);
 
+  const [testStatus, setTestStatus] = useState<{
+    loading: boolean;
+    exa?: { ok: boolean; error?: string };
+    anthropic?: { ok: boolean; error?: string };
+  }>({ loading: false });
+
   const canGenerate = topicInput.trim().length > 0 && !isGenerating;
+
+  const handleTestKeys = useCallback(async () => {
+    setTestStatus({ loading: true });
+    try {
+      const res = await fetch("/api/test-keys");
+      const data = await res.json();
+      setTestStatus({ loading: false, exa: data.exa, anthropic: data.anthropic });
+    } catch {
+      setTestStatus({ loading: false, exa: { ok: false, error: "Fetch failed" }, anthropic: { ok: false, error: "Fetch failed" } });
+    }
+  }, []);
 
   const handleTopicKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && topicInput.trim()) {
@@ -145,12 +162,33 @@ export default function TitleSlide({
         </div>
       )}
 
-      {/* Powered by */}
+      {/* Powered by + test button */}
       {!isGenerated && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3">
           <span className="text-xs text-slate-700 tracking-wider">
             Powered by <span className="text-slate-500 font-medium">Exa</span> + <span className="text-slate-500 font-medium">Claude</span>
           </span>
+          <button
+            onClick={handleTestKeys}
+            disabled={testStatus.loading}
+            className="text-xs text-slate-600 hover:text-slate-400 transition-colors underline underline-offset-2 disabled:opacity-50"
+          >
+            {testStatus.loading ? "Testing..." : "Test API keys"}
+          </button>
+          {(testStatus.exa || testStatus.anthropic) && (
+            <div className="flex gap-4 text-xs">
+              {testStatus.exa && (
+                <span className={testStatus.exa.ok ? "text-emerald-400" : "text-red-400"}>
+                  Exa: {testStatus.exa.ok ? "OK" : testStatus.exa.error}
+                </span>
+              )}
+              {testStatus.anthropic && (
+                <span className={testStatus.anthropic.ok ? "text-emerald-400" : "text-red-400"}>
+                  Claude: {testStatus.anthropic.ok ? "OK" : testStatus.anthropic.error}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       )}
     </section>

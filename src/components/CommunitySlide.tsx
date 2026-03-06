@@ -8,9 +8,14 @@ interface CommunitySlideProps {
   insight?: string;
 }
 
+function normalizeUrl(url: string): string {
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `https://${url}`;
+}
+
 function getDomain(url: string): string {
   try {
-    return new URL(url).hostname.replace("www.", "");
+    return new URL(normalizeUrl(url)).hostname.replace("www.", "");
   } catch {
     return url;
   }
@@ -18,7 +23,7 @@ function getDomain(url: string): string {
 
 function getHandle(url: string): string | null {
   try {
-    const u = new URL(url);
+    const u = new URL(normalizeUrl(url));
     if (u.hostname === "x.com" || u.hostname === "twitter.com") {
       const parts = u.pathname.split("/").filter(Boolean);
       if (parts.length > 0) return parts[0];
@@ -29,12 +34,12 @@ function getHandle(url: string): string | null {
 
 function TweetCard({ result, index }: { result: ExaResult; index: number }) {
   const domain = getDomain(result.url);
-  const text = result.text?.slice(0, 280) || result.title;
+  const text = result.title;
   const handle = result.author || getHandle(result.url);
 
   return (
     <a
-      href={result.url}
+      href={normalizeUrl(result.url)}
       target="_blank"
       rel="noopener noreferrer"
       className="block rounded-2xl border border-amber-100 bg-white p-5 hover:border-amber-300 hover:shadow-md transition-all animate-slide-up"
@@ -55,7 +60,7 @@ function TweetCard({ result, index }: { result: ExaResult; index: number }) {
         ) : (
           <span />
         )}
-        <span className="text-xs text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+        <span className="text-xs text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 shrink-0">
           {domain}
         </span>
       </div>
