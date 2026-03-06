@@ -34,11 +34,7 @@ function getHandle(url: string): string | null {
 
 function TweetCard({ result, index }: { result: ExaResult; index: number }) {
   const domain = getDomain(result.url);
-  const raw = result.text?.slice(0, 280) || result.title;
-  // Skip AI-generated image descriptions from Exa
-  const text = raw.startsWith("The image ") || raw.startsWith("The post ") || raw.startsWith("This post ")
-    ? result.title
-    : raw;
+  const text = result.text?.slice(0, 280) || result.title;
   const handle = result.author || getHandle(result.url);
 
   return (
@@ -118,7 +114,7 @@ export default function CommunitySlide({ results, isLoading, insight }: Communit
         <div className="max-w-6xl mx-auto h-full">
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 h-full content-start">
-              {Array.from({ length: 6 }).map((_, i) => <SkeletonTweetCard key={i} />)}
+              {Array.from({ length: 9 }).map((_, i) => <SkeletonTweetCard key={i} />)}
             </div>
           ) : results.length === 0 ? (
             <p className="text-slate-400 text-center py-16">No community signals found for this topic.</p>

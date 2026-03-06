@@ -27,32 +27,14 @@ function FeaturedBrandCard({ result }: { result: ExaResult }) {
       rel="noopener noreferrer"
       className="block rounded-2xl overflow-hidden border border-slate-200 hover:border-teal-300 hover:shadow-lg transition-all group animate-fade-in"
     >
-      {/* Image banner or gradient placeholder */}
-      {result.image ? (
-        <div className="h-52 w-full overflow-hidden bg-teal-50">
-          <img
-            src={result.image}
-            alt={result.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            onError={(e) => {
-              const parent = (e.target as HTMLImageElement).parentElement;
-              if (parent) parent.className = "h-52 w-full bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center";
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-          />
-        </div>
-      ) : (
-        <div className="h-52 w-full bg-gradient-to-br from-teal-50 via-teal-100 to-emerald-50 flex items-center justify-center">
-          {result.favicon && (
-            <img
-              src={result.favicon}
-              alt=""
-              className="w-12 h-12 rounded-xl opacity-40"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-            />
-          )}
-        </div>
-      )}
+      {/* Image banner */}
+      <div className="h-36 w-full overflow-hidden bg-teal-50">
+        <img
+          src={result.image!}
+          alt={result.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
+      </div>
 
       <div className="p-6 bg-white">
         <div className="flex items-center gap-2 mb-3">
@@ -120,7 +102,7 @@ function BrandGridCard({ result, index }: { result: ExaResult; index: number }) 
 function SkeletonFeatured() {
   return (
     <div className="rounded-2xl overflow-hidden border border-slate-200 animate-pulse">
-      <div className="h-52 bg-slate-100" />
+      <div className="h-36 bg-slate-100" />
       <div className="p-6 bg-white space-y-3">
         <div className="h-4 bg-slate-100 rounded w-24" />
         <div className="h-6 bg-slate-200 rounded w-3/4" />
@@ -142,8 +124,9 @@ function SkeletonGridCard() {
 }
 
 export default function BrandsSlide({ results, isLoading, insight }: BrandsSlideProps) {
-  const featured = results[0];
-  const grid = results.slice(1);
+  const featuredIdx = results.findIndex((r) => r.image);
+  const featured = featuredIdx >= 0 ? results[featuredIdx] : null;
+  const grid = featured ? results.filter((_, i) => i !== featuredIdx) : results;
 
   return (
     <section className="h-screen w-full snap-start bg-white flex flex-col">

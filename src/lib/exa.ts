@@ -70,7 +70,7 @@ export async function searchDiscussions(topic: string, vertical?: string): Promi
     `${topic}${context} obsessed discovering trying niche underground alternative cult 2025`,
     {
       type: "auto",
-      numResults: 6,
+      numResults: 9,
       category: "tweet",
       contents: {
         livecrawl: "preferred",
